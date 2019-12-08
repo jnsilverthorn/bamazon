@@ -3,6 +3,7 @@ var inquirer = require('inquirer');
 
 var con = mySQL.createConnection({
     host: "localhost",
+    port: 3306,
     user: "root",
     password: "root",
     database: "bamazon"
@@ -10,32 +11,33 @@ var con = mySQL.createConnection({
 
 con.connect((err) => {
     if (err) throw err;
-    console.log("Connected.")
-    console.log("----------------------\n");
 });
 
-con.query('select * from bamazon.products', (err, rows) => {
-    if (err) throw err;
+function displayTable() {
+    con.query('SELECT * FROM bamazon.products', (err, rows) => {
+        if (err) throw err;
 
-    rows.forEach((row) => {
-        var inStock;
+        rows.forEach((row) => {
+            var inStock;
 
-        if (row.stock_quantity > 0) {
-            inStock = row.stock_quantity;
-        } else if (row.stock_quantity === 0 || row.stock_quantity < 0) {
-            inStock = "Out of Stock";
-        }
+            if (row.stock_quantity > 0) {
+                inStock = row.stock_quantity;
+            } else if (row.stock_quantity === 0 || row.stock_quantity < 0) {
+                inStock = "Out of Stock";
+            }
 
-        console.log(`Product ID: ${row.item_id} | Product: ${row.product_name} | Price: $${row.price}.00 | In Stock: ${inStock}`);
-        console.log("----------------------------------------------------------------------------------");
+            console.log(`ID: ${row.item_id} | Department: ${row.department_name} | Product: ${row.product_name} | Price: $${row.price}.00 | In Stock: ${inStock}`);
+            console.log("----------------------------------------------------------------------------------");
+        });
+
+        customerInquirer(rows);
     });
+};
 
-    customerInquirer(rows);
-});
+displayTable();
 
 
 function customerInquirer(data) {
-    //console.log(data);
     inquirer.prompt([
         {
             type: "confirm",
@@ -56,17 +58,13 @@ function customerInquirer(data) {
                     name: "quantity"
                 }
             ]).then((inquirerResponse2) => {
-                //console.log(data);
-
                 if (inquirerResponse2.quantity <= data[inquirerResponse2.itemID - 1].stock_quantity) {
-                    con.query('update bamazon.products set stock_quantity = ? where item_id = ?',
+                    con.query('UPDATE bamazon.products SET stock_quantity = ? WHERE item_id = ?',
                         [`${data[inquirerResponse2.itemID - 1].stock_quantity - inquirerResponse2.quantity}`, `${inquirerResponse2.itemID}`],
                         (err, result) => {
                             if (err) throw err;
-                            //console.log(result.affectedRows)
                         })
-                    console.log("Thanks for shopping!");
-                    endConnection();
+                    displayTable();
                 } else {
                     console.log("There are not enough items in stock to purchase that many!");
                     inquirer.prompt([
@@ -90,14 +88,12 @@ function customerInquirer(data) {
                                 }
                             ]).then((inquirerResponse4) => {
                                 if (inquirerResponse4.quantity <= data[inquirerResponse4.itemID - 1].stock_quantity) {
-                                    con.query('update bamazon.products set stock_quantity = ? where item_id = ?',
+                                    con.query('UPDATE bamazon.products SET stock_quantity = ? WHERE item_id = ?',
                                         [`${data[inquirerResponse4.itemID - 1].stock_quantity - inquirerResponse4.quantity}`, `${inquirerResponse4.itemID}`],
                                         (err, result) => {
                                             if (err) throw err;
-                                            //console.log(result.affectedRows)
                                         })
-                                    console.log("Thanks for shopping!");
-                                    endConnection();
+                                    displayTable();
                                 } else {
                                     console.log("There still isn't enough for that! Have a good day.")
                                     endConnection();
