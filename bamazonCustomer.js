@@ -36,7 +36,6 @@ function displayTable() {
 
 displayTable();
 
-
 function customerInquirer(data) {
     inquirer.prompt([
         {
@@ -63,7 +62,12 @@ function customerInquirer(data) {
                         [`${data[inquirerResponse2.itemID - 1].stock_quantity - inquirerResponse2.quantity}`, `${inquirerResponse2.itemID}`],
                         (err, result) => {
                             if (err) throw err;
-                        })
+                        });
+                    con.query('UPDATE bamazon.products SET product_sales = ? WHERE item_id = ?',
+                        [`${data[inquirerResponse2.itemID - 1].price * inquirerResponse2.quantity}`, `${inquirerResponse2.itemID}`],
+                        (err, result) => {
+                            if (err) throw err;
+                        });
                     displayTable();
                 } else {
                     console.log("There are not enough items in stock to purchase that many!");
@@ -92,7 +96,12 @@ function customerInquirer(data) {
                                         [`${data[inquirerResponse4.itemID - 1].stock_quantity - inquirerResponse4.quantity}`, `${inquirerResponse4.itemID}`],
                                         (err, result) => {
                                             if (err) throw err;
-                                        })
+                                        });
+                                    con.query('UPDATE bamazon.products SET product_sales = ? WHERE item_id = ?',
+                                        [`${data[inquirerResponse4.itemID - 1].price * inquirerResponse4.quantity}`, `${inquirerResponse4.itemID}`],
+                                        (err, result) => {
+                                            if (err) throw err;
+                                        });
                                     displayTable();
                                 } else {
                                     console.log("There still isn't enough for that! Have a good day.")
